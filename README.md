@@ -1,0 +1,2 @@
+# AzureTemplates
+ COCloud Azure Templates
