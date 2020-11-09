@@ -24,7 +24,6 @@
         "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
       }
     },
-
     "OSVersion": {
       "type": "string",
       "defaultValue": "2019-Datacenter",
@@ -62,7 +61,7 @@
       "metadata": {
         "description": "Name of the virtual machine."
       }
-    }
+    },
     "nicName": {
       "type": "string",
       "defaultValue": "coazr-nic01",
@@ -132,7 +131,7 @@
             "managedDisk": {
               "storageAccountType": "StandardSSD_LRS"
             }
-          },
+          }
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -150,4 +149,9 @@
       }
     }
   ],
+  "outputs": {
+    "hostname": {
+      "type": "string"
+    }
+  }
 }
