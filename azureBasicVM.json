@@ -135,7 +135,7 @@
         "diagnosticsProfile": {
           "bootDiagnostics": {
             "enabled": true,
-            "storageUri": "/subscriptions/a16cd674-1c10-4937-849f-a74eab94b110/resourceGroups/it_production_eastus-group/providers/Microsoft.Storage/storageAccounts/ccesitproductioneastus.primaryEndpoints.blob]"
+            "storageUri": "https://ccesitproductioneastus.blob.core.windows.net/"
           }
         }
       }
