@@ -1,0 +1,148 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {},
+  "variables": {
+    "singleQuote": "'",
+    "logAnalytics": "[concat('[parameters(', variables('singleQuote'), 'logAnalytics', variables('singleQuote'), ')]')]",
+    "resourceName": "[concat('[parameters(', variables('singleQuote'), 'resourceName', variables('singleQuote'), ')]')]",
+    "resourceDiagName": "[concat('[concat(', 'parameters(', variables('singleQuote'), 'resourceName', variables('singleQuote'), ')', ', ', variables('singleQuote'), '/', variables('singleQuote'), ', ', variables('singleQuote'), 'Microsoft.Insights/setByPolicy', variables('singleQuote'), ')]')]",
+    "resourceNameField": "[concat('[field(', variables('singleQuote'), 'name', variables('singleQuote'), ')]')]",
+    "resourceFullNameField": "[concat('[field(', variables('singleQuote'), 'fullName', variables('singleQuote'), ')]')]",
+    "location": "[concat('[parameters(', variables('singleQuote'), 'location', variables('singleQuote'), ')]')]",
+    "locationField": "[concat('[field(', variables('singleQuote'), 'location', variables('singleQuote'), ')]')]",
+    "policyDescription": "This policy automatically deploys and enable diagnostic settings to Log Analytics",
+    "nsgDiagPolicyName": "nsg-diagnostic-settings-policyDef",
+    "diagSettingsInitiativeName": "resource-diagnostic-settings-policySet"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "name": "[variables('nsgDiagPolicyName')]",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "displayName": "Apply diagnostic settings for Network Security Groups - Log Analytics",
+        "description": "[variables('policyDescription')]",
+        "metadata": {
+          "category": "Monitoring"
+        },
+        "mode": "all",
+        "parameters": {
+          "logAnalytics": {
+            "type": "string",
+            "metadata": {
+              "displayName": "Log Analytics workspace",
+              "description": "Select the Log Analytics workspace from dropdown list",
+              "strongType": "omsWorkspace"
+            }
+          }
+        },
+        "policyRule": {
+          "if": {
+            "field": "type",
+            "equals": "Microsoft.Network/networkSecurityGroups"
+          },
+          "then": {
+            "effect": "deployIfNotExists",
+            "details": {
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "name": "setByPolicy",
+              "roleDefinitionIds": [
+                "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+              ],
+              "deployment": {
+                "properties": {
+                  "mode": "incremental",
+                  "template": {
+                    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                      "resourceName": {
+                        "type": "string"
+                      },
+                      "logAnalytics": {
+                        "type": "string"
+                      },
+                      "location": {
+                        "type": "string"
+                      }
+                    },
+                    "variables": {},
+                    "resources": [
+                      {
+                        "type": "Microsoft.Network/networkSecurityGroups/providers/diagnosticSettings",
+                        "apiVersion": "2018-06-01",
+                        "name": "[variables('resourceDiagName')]",
+                        "location": "[variables('location')]",
+                        "dependsOn": [],
+                        "properties": {
+                          "workspaceId": "[variables('logAnalytics')]",
+                          "metrics": [],
+                          "logs": [
+                            {
+                              "category": "NetworkSecurityGroupEvent",
+                              "enabled": true
+                            },
+                            {
+                              "category": "NetworkSecurityGroupRuleCounter",
+                              "enabled": true
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": {}
+                  },
+                  "parameters": {
+                    "logAnalytics": {
+                      "value": "[variables('logAnalytics')]"
+                    },
+                    "location": {
+                      "value": "[variables('locationField')]"
+                    },
+                    "resourceName": {
+                      "value": "[variables('resourceNameField')]"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policySetDefinitions",
+      "name": "[variables('diagSettingsInitiativeName')]",
+      "apiVersion": "2018-05-01",
+       "properties": {
+        "displayName": "Apply diagnostic settings for applicable resources - Log Analytics",
+        "description": "This initiative configures application Azure resources to forward diagnostic logs and metrics to an Azure Log Analytics workspace.",
+        "metadata": {
+          "category": "Monitoring"
+        },
+        "parameters": {
+          "logAnalytics": {
+            "type": "string",
+            "metadata": {
+              "displayName": "Log Analytics workspace",
+              "description": "Select the Log Analytics workspace from dropdown list",
+              "strongType": "omsWorkspace"
+            }
+          }
+        },
+        "policyDefinitions": [
+          {
+            "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions/', variables('nsgDiagPolicyName'))]",
+            "parameters": {
+              "logAnalytics": {
+                "value": "[variables('logAnalytics')]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}
